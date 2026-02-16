@@ -44,9 +44,9 @@ func InitDB() {
 		status TEXT,
 		date DATETIME,
 		FOREIGN KEY(member_id) REFERENCES members(id)
-	);	FOREIGN KEY(member_id) REFERENCES members(id)
 	);
 	`
+
 	_, err = DB.Exec(createTables)
 	if err != nil {
 		log.Fatalf("Error creating tables: %v", err)
