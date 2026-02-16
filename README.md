@@ -57,6 +57,16 @@ npm run dev:frontend
 
 The application will be available at `http://localhost:5173`.
 
+## BMAD Integration
+
+This project utilizes the **BMAD (Big Model Analysis & Design)** methodology for AI-assisted development.
+
+*   **Party Mode**: Collaborative multi-agent sessions for architecture and planning.
+*   **Specialized Agents**: Architect, Analyst, Developer, and QA agents with project-specific context.
+*   **Local Session Artifacts**: Architectural decisions and diagrams are generated in `bmad-session/` (not committed to repo).
+
+👉 **[Read the Full BMAD Usage Guide](docs/bmad-guide.md)**
+
 ## CI/CD Infrastructure
 
 Continuous Integration is handled via GitHub Actions. Workflows are defined in `.github/workflows/ci.yml`.
