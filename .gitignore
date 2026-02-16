@@ -19,3 +19,8 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# BMAD
+_bmad-output/
+.bmad-core/
+.agent/
