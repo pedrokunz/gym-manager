@@ -20,10 +20,17 @@
       <div class="list-container">
         <transition-group name="list" tag="div" class="member-list">
           <div v-for="m in members" :key="m.id" class="member-item glass-panel">
+<<<<<<< HEAD
             <router-link :to="`/members/${m.id}`" class="member-info">
               <span class="member-name">{{ m.name }}</span>
               <span class="member-email">{{ m.email }}</span>
             </router-link>
+=======
+            <div class="member-info">
+              <span class="member-name">{{ m.name }}</span>
+              <span class="member-email">{{ m.email }}</span>
+            </div>
+>>>>>>> 8804b81 (feat(frontend): add pagination, glassmorphism and animations)
             <button @click="handleDelete(m.id)" class="btn-danger">
               Remove
             </button>
@@ -107,6 +114,7 @@ const handleDelete = async (id) => {
 </script>
 
 <style scoped>
+<<<<<<< HEAD
 /* ... */
 .member-info {
   display: flex;
@@ -116,6 +124,80 @@ const handleDelete = async (id) => {
   cursor: pointer;
 }
 
+=======
+.members-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.badge {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.form-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.input-group {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.glass-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.member-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(5px);
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+}
+
+>>>>>>> 8804b81 (feat(frontend): add pagination, glassmorphism and animations)
 .member-name {
   font-weight: 600;
   color: #f1f5f9;
