@@ -38,10 +38,13 @@ func InitDB() {
 	);
 	CREATE TABLE IF NOT EXISTS invoices (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		member_id INTEGER,
 		member_name TEXT,
 		amount REAL,
 		status TEXT,
-		date DATETIME
+		date DATETIME,
+		FOREIGN KEY(member_id) REFERENCES members(id)
+	);	FOREIGN KEY(member_id) REFERENCES members(id)
 	);
 	`
 	_, err = DB.Exec(createTables)

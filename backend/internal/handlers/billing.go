@@ -12,6 +12,7 @@ import (
 
 type Invoice struct {
 	ID         int       `json:"id"`
+	MemberID   int       `json:"member_id"`
 	MemberName string    `json:"member_name"`
 	Amount     float64   `json:"amount"`
 	Status     string    `json:"status"`
@@ -19,7 +20,7 @@ type Invoice struct {
 }
 
 func GetInvoices(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.DB.Query("SELECT id, member_name, amount, status, date FROM invoices ORDER BY date DESC")
+	rows, err := db.DB.Query("SELECT id, member_id, member_name, amount, status, date FROM invoices ORDER BY date DESC")
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -30,7 +31,7 @@ func GetInvoices(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var i Invoice
 		var dateStr string
-		err := rows.Scan(&i.ID, &i.MemberName, &i.Amount, &i.Status, &dateStr)
+		err := rows.Scan(&i.ID, &i.MemberID, &i.MemberName, &i.Amount, &i.Status, &dateStr)
 		if err == nil {
 			i.Date, _ = time.Parse(time.RFC3339, dateStr)
 			invoices = append(invoices, i)
@@ -45,8 +46,14 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	var i Invoice
 	json.NewDecoder(r.Body).Decode(&i)
 
-	_, err := db.DB.Exec("INSERT INTO invoices (member_name, amount, status, date) VALUES (?, ?, ?, ?)",
-		i.MemberName, i.Amount, "pending", time.Now().Format(time.RFC3339))
+	// Basic validation
+	if i.MemberID == 0 {
+		http.Error(w, "member_id is required", 400)
+		return
+	}
+
+	_, err := db.DB.Exec("INSERT INTO invoices (member_id, member_name, amount, status, date) VALUES (?, ?, ?, ?, ?)",
+		i.MemberID, i.MemberName, i.Amount, "pending", time.Now().Format(time.RFC3339))
 
 	if err != nil {
 		w.WriteHeader(500)

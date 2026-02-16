@@ -43,22 +43,37 @@ func main() {
 }
 
 func seedData() {
-	db.DB.Exec("DELETE FROM plans")
-	db.DB.Exec("DELETE FROM classes")
-	db.DB.Exec("DELETE FROM members")
-	db.DB.Exec("DELETE FROM invoices")
-	db.DB.Exec("DELETE FROM sqlite_sequence")
+	// Check if data already exists
+	var count int
+	err := db.DB.QueryRow("SELECT COUNT(*) FROM plans").Scan(&count)
+	if err == nil && count > 0 {
+		log.Println("Database already seeded, skipping...")
+		return
+	}
+
+	log.Println("Seeding database...")
+
+	// db.DB.Exec("DELETE FROM plans")
+	// db.DB.Exec("DELETE FROM classes")
+	// db.DB.Exec("DELETE FROM members")
+	// db.DB.Exec("DELETE FROM invoices")
+	// db.DB.Exec("DELETE FROM sqlite_sequence")
 
 	db.DB.Exec("INSERT INTO plans (name, price, duration_months) VALUES ('Pro Monthly', 50.0, 1)")
 	db.DB.Exec("INSERT INTO plans (name, price, duration_months) VALUES ('Annual Saver', 480.0, 12)")
 
-	db.DB.Exec("INSERT INTO invoices (member_name, amount, status, date) VALUES (?, ?, ?, ?)",
-		"Alice Smith", 50.0, "paid", time.Now().AddDate(0, -1, 0).Format(time.RFC3339))
-	db.DB.Exec("INSERT INTO invoices (member_name, amount, status, date) VALUES (?, ?, ?, ?)",
-		"Alice Smith", 50.0, "pending", time.Now().Format(time.RFC3339))
+	// Seed Member first to get ID
+	res, _ := db.DB.Exec("INSERT INTO members (name, email, status, joined_at) VALUES ('Alice Smith', 'alice@example.com', 'active', '2024-01-01')")
+	memberID, _ := res.LastInsertId()
+
+	db.DB.Exec("INSERT INTO invoices (member_id, member_name, amount, status, date) VALUES (?, ?, ?, ?, ?)",
+		memberID, "Alice Smith", 50.0, "paid", time.Now().AddDate(0, -1, 0).Format(time.RFC3339))
+	db.DB.Exec("INSERT INTO invoices (member_id, member_name, amount, status, date) VALUES (?, ?, ?, ?, ?)",
+		memberID, "Alice Smith", 50.0, "pending", time.Now().Format(time.RFC3339))
 
 	db.DB.Exec("INSERT INTO classes (name, trainer, schedule) VALUES ('Crossfit 101', 'John Doe', 'Mon/Wed 10:00')")
 	db.DB.Exec("INSERT INTO classes (name, trainer, schedule) VALUES ('Yoga Flow', 'Jane Smith', 'Tue/Thu 18:00')")
 
-	db.DB.Exec("INSERT INTO members (name, email, status, joined_at) VALUES ('Alice Smith', 'alice@example.com', 'active', '2024-01-01')")
+	// member inserted above
+	// db.DB.Exec("INSERT INTO members (name, email, status, joined_at) VALUES ('Alice Smith', 'alice@example.com', 'active', '2024-01-01')")
 }

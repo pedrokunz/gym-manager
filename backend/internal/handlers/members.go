@@ -16,11 +16,14 @@ func ListMembers(w http.ResponseWriter, r *http.Request) {
 	statusFilter := r.URL.Query().Get("status")
 
 	query := "SELECT id, name, email FROM members"
+	var args []interface{}
+
 	if statusFilter != "" {
-		query += " WHERE status = '" + statusFilter + "'"
+		query += " WHERE status = ?"
+		args = append(args, statusFilter)
 	}
 
-	rows, err := db.DB.Query(query)
+	rows, err := db.DB.Query(query, args...)
 	if err != nil {
 		http.Error(w, "DB error: "+err.Error(), 500)
 		return
@@ -67,7 +70,7 @@ func DeleteMember(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/members/")
 	id, _ := strconv.Atoi(idStr)
 
-	_, err := db.DB.Exec("DELETE FROM members WHERE id = " + strconv.Itoa(id))
+	_, err := db.DB.Exec("DELETE FROM members WHERE id = ?", id)
 	if err != nil {
 		w.WriteHeader(500)
 		return
