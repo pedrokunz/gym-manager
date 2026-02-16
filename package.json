@@ -1,0 +1,18 @@
+{
+  "name": "gym-manager-monorepo",
+  "version": "1.0.0",
+  "description": "Gym Manager Monorepo with Go backend and Vue 3 frontend",
+  "scripts": {
+    "dev:backend": "cd backend && go run cmd/main.go",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd frontend && npm install && npx playwright install chromium",
+    "test:backend": "cd backend && go test ./...",
+    "test:frontend": "cd frontend && npm run test",
+    "test:e2e": "cd frontend && npm run test:e2e",
+    "build:backend": "cd backend && go build -o bin/server cmd/main.go",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
