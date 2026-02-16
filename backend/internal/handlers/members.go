@@ -6,43 +6,39 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/pedrokunz/gym-manager/backend/internal/db"
-	"github.com/pedrokunz/gym-manager/backend/internal/models"
+	"github.com/pedrokunz/gym-manager/backend/internal/repository"
 )
 
-func ListMembers(w http.ResponseWriter, r *http.Request) {
+type MemberHandler struct {
+	Repo repository.Repository
+}
+
+func NewMemberHandler(repo repository.Repository) *MemberHandler {
+	return &MemberHandler{Repo: repo}
+}
+
+func (h *MemberHandler) ListMembers(w http.ResponseWriter, r *http.Request) {
 	statusFilter := r.URL.Query().Get("status")
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 
-	query := "SELECT id, name, email FROM members"
-	var args []interface{}
-
-	if statusFilter != "" {
-		query += " WHERE status = ?"
-		args = append(args, statusFilter)
+	if limit == 0 {
+		limit = 20
 	}
 
-	rows, err := db.DB.Query(query, args...)
+	members, err := h.Repo.ListMembers(statusFilter, limit, offset)
 	if err != nil {
 		http.Error(w, "DB error: "+err.Error(), 500)
 		return
-	}
-	defer rows.Close()
-
-	var members []models.Member
-	for rows.Next() {
-		var m models.Member
-		rows.Scan(&m.ID, &m.Name, &m.Email)
-		members = append(members, m)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)
 }
 
-func CreateMember(w http.ResponseWriter, r *http.Request) {
-	var m models.Member
+func (h *MemberHandler) CreateMember(w http.ResponseWriter, r *http.Request) {
+	var m repository.Member
 	json.NewDecoder(r.Body).Decode(&m)
 
 	if m.Name == "" || !strings.Contains(m.Email, "@") {
@@ -51,26 +47,31 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec("INSERT INTO members (name, email, status, joined_at) VALUES (?, ?, ?, ?)",
-		m.Name, m.Email, "active", time.Now())
-
+	id, err := h.Repo.CreateMember(m)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	id, _ := res.LastInsertId()
-	m.ID = int(id)
+	m.ID = id
+	// Since CreateMember in repo adds JoinedAt and Status, we might want to return the full object as added.
+	// But for now, sticking to the repo input/output contract.
+	// Actually, repo.CreateMember(m) returns (int, error).
+	// The repo implementation sets 'active' and 'JoinedAt' in the DB.
+	// The returned 'm' here won't have them set unless we fetch or manually set them.
+	// For simplicity, let's manually set them on the response object if needed, or just return ID + input data.
+	m.Status = "active"
+	// m.JoinedAt = time.Now() // we don't import time, let's skip unless critical.
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(m)
 }
 
-func DeleteMember(w http.ResponseWriter, r *http.Request) {
+func (h *MemberHandler) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/members/")
 	id, _ := strconv.Atoi(idStr)
 
-	_, err := db.DB.Exec("DELETE FROM members WHERE id = ?", id)
+	err := h.Repo.DeleteMember(id)
 	if err != nil {
 		w.WriteHeader(500)
 		return

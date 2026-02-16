@@ -5,45 +5,38 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/pedrokunz/gym-manager/backend/internal/db"
+	"github.com/pedrokunz/gym-manager/backend/internal/repository"
 )
 
-type Invoice struct {
-	ID         int       `json:"id"`
-	MemberID   int       `json:"member_id"`
-	MemberName string    `json:"member_name"`
-	Amount     float64   `json:"amount"`
-	Status     string    `json:"status"`
-	Date       time.Time `json:"date"`
+type BillingHandler struct {
+	Repo repository.Repository
 }
 
-func GetInvoices(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.DB.Query("SELECT id, member_id, member_name, amount, status, date FROM invoices ORDER BY date DESC")
+func NewBillingHandler(repo repository.Repository) *BillingHandler {
+	return &BillingHandler{Repo: repo}
+}
+
+func (h *BillingHandler) GetInvoices(w http.ResponseWriter, r *http.Request) {
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+
+	if limit == 0 {
+		limit = 20
+	}
+
+	invoices, err := h.Repo.ListInvoices(limit, offset)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
-	}
-	defer rows.Close()
-
-	var invoices []Invoice
-	for rows.Next() {
-		var i Invoice
-		var dateStr string
-		err := rows.Scan(&i.ID, &i.MemberID, &i.MemberName, &i.Amount, &i.Status, &dateStr)
-		if err == nil {
-			i.Date, _ = time.Parse(time.RFC3339, dateStr)
-			invoices = append(invoices, i)
-		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(invoices)
 }
 
-func CreateInvoice(w http.ResponseWriter, r *http.Request) {
-	var i Invoice
+func (h *BillingHandler) CreateInvoice(w http.ResponseWriter, r *http.Request) {
+	var i repository.Invoice
 	json.NewDecoder(r.Body).Decode(&i)
 
 	// Basic validation
@@ -52,9 +45,15 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := db.DB.Exec("INSERT INTO invoices (member_id, member_name, amount, status, date) VALUES (?, ?, ?, ?, ?)",
-		i.MemberID, i.MemberName, i.Amount, "pending", time.Now().Format(time.RFC3339))
+	// Wait, repository.CreateInvoice takes 'Invoice' struct.
+	// We need to set 'pending' and 'time.Now()' somewhere if the repository doesn't.
+	// Checking sqlite_repository.go:
+	// func (r *SQLiteRepository) CreateInvoice(inv Invoice) error {
+	//    _, err := r.DB.Exec("... VALUES (?, ?, ?, ?, ?)", inv.MemberID, inv.MemberName, inv.Amount, "pending", time.Now()...
+	// }
+	// So repo handles Status and Date! We just pass the partial invoice.
 
+	err := h.Repo.CreateInvoice(i)
 	if err != nil {
 		w.WriteHeader(500)
 		return
@@ -62,11 +61,11 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 }
 
-func PayInvoice(w http.ResponseWriter, r *http.Request) {
+func (h *BillingHandler) PayInvoice(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/invoices/pay/")
 	id, _ := strconv.Atoi(idStr)
 
-	_, err := db.DB.Exec("UPDATE invoices SET status = 'paid' WHERE id = ?", id)
+	err := h.Repo.PayInvoice(id)
 	if err != nil {
 		w.WriteHeader(500)
 		return

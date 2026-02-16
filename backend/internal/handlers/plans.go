@@ -4,42 +4,50 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/pedrokunz/gym-manager/backend/internal/db"
+	"github.com/pedrokunz/gym-manager/backend/internal/repository"
 )
 
-func GetPlans(w http.ResponseWriter, r *http.Request) {
-	rows, _ := db.DB.Query("SELECT * FROM plans")
-	defer rows.Close()
+type PlanHandler struct {
+	Repo repository.Repository
+}
 
-	plans := []map[string]interface{}{}
-	for rows.Next() {
-		var id int
-		var name string
-		var price float64
-		var months int
-		rows.Scan(&id, &name, &price, &months)
+func NewPlanHandler(repo repository.Repository) *PlanHandler {
+	return &PlanHandler{Repo: repo}
+}
 
-		monthly := price / float64(months)
-
-		plans = append(plans, map[string]interface{}{
-			"id":              id,
-			"name":            name,
-			"total_price":     price,
-			"months":          months,
-			"price_per_month": monthly,
-		})
+func (h *PlanHandler) GetPlans(w http.ResponseWriter, r *http.Request) {
+	plans, err := h.Repo.ListPlans()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(plans)
 }
 
-func CreatePlan(w http.ResponseWriter, r *http.Request) {
-	var data map[string]interface{}
-	json.NewDecoder(r.Body).Decode(&data)
+func (h *PlanHandler) CreatePlan(w http.ResponseWriter, r *http.Request) {
+	// Plan creation using map/interface to match previous loose typing,
+	// or define a precise struct. Ideally repo.CreatePlan takes specific arguments.
+	// Let's decode into a temp struct matching the JSON expected by frontend.
+	var input struct {
+		Name           string  `json:"name"`
+		Price          float64 `json:"price"` // Frontend sends 'price' or 'total_price'?
+		DurationMonths int     `json:"duration_months"`
+	}
+	// Note: previous implementation used map["price"].
+	// Let's assume frontend sends 'price'.
 
-	db.DB.Exec("INSERT INTO plans (name, price, duration_months) VALUES (?, ?, ?)",
-		data["name"], data["price"], data["duration_months"])
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", 400)
+		return
+	}
+
+	err := h.Repo.CreatePlan(input.Name, input.Price, input.DurationMonths)
+	if err != nil {
+		http.Error(w, "Failed to create plan", 500)
+		return
+	}
 
 	w.WriteHeader(201)
 }
