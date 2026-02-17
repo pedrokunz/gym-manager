@@ -12,11 +12,16 @@ Go backend for Gym Manager.
 
 ### REST
 
-- `GET /api/members`: List all members (supports `?status=` filter).
+- `GET /api/members`: List members (supports `?status=`, `limit=`, `offset=`).
+- `GET /api/members/:id`: Get detailed member profile.
+- `GET /api/members/:id/invoices`: List invoices for a specific member.
 - `POST /api/members`: Add a new member.
 - `DELETE /api/members/:id`: Remove a member.
+- `GET /api/dashboard`: Get dashboard analytics and recent activity.
 - `GET /api/plans/getall`: List all membership plans.
 - `POST /api/plans_create`: Add a new plan.
+- `GET /api/invoices`: List all invoices.
+- `POST /api/invoices/pay/:id`: Mark an invoice as paid.
 
 ### GraphQL
 

@@ -10,10 +10,13 @@ Vue 3 frontend for Gym Manager.
 
 ## Modules
 
-- **Member Management**: Complete CRUD operations for gym members.
+- **Dashboard**: High-level analytics overview with revenue metrics and recent payments.
+- **Member Management**: List, filter, and manage gym members with pagination.
+- **Member Profiles**: Detailed view for individual members showing activity and invoice history.
 - **Membership Plans**: Viewing and discount calculation engine.
 - **Gym Classes**: GraphQL-powered class viewer.
-- **Sidebar**: Context-aware sidebar with recent plan data.
+- **Billing**: Comprehensive invoice management and payment tracking.
+- **Sidebar**: Context-aware sidebar with dynamic data integration.
 
 ## Testing
 
