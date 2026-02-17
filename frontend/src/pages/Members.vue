@@ -21,6 +21,7 @@
         <transition-group name="list" tag="div" class="member-list">
           <div v-for="m in members" :key="m.id" class="member-item glass-panel">
 <<<<<<< HEAD
+<<<<<<< HEAD
             <router-link :to="`/members/${m.id}`" class="member-info">
               <span class="member-name">{{ m.name }}</span>
               <span class="member-email">{{ m.email }}</span>
@@ -31,6 +32,12 @@
               <span class="member-email">{{ m.email }}</span>
             </div>
 >>>>>>> 8804b81 (feat(frontend): add pagination, glassmorphism and animations)
+=======
+            <router-link :to="`/members/${m.id}`" class="member-info">
+              <span class="member-name">{{ m.name }}</span>
+              <span class="member-email">{{ m.email }}</span>
+            </router-link>
+>>>>>>> 0707dfb (feat(frontend): implement Member Profile view and API service updates)
             <button @click="handleDelete(m.id)" class="btn-danger">
               Remove
             </button>
@@ -115,6 +122,7 @@ const handleDelete = async (id) => {
 
 <style scoped>
 <<<<<<< HEAD
+<<<<<<< HEAD
 /* ... */
 .member-info {
   display: flex;
@@ -192,9 +200,15 @@ const handleDelete = async (id) => {
   transform: translateX(5px);
 }
 
+=======
+/* ... */
+>>>>>>> 0707dfb (feat(frontend): implement Member Profile view and API service updates)
 .member-info {
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  flex: 1;
+  cursor: pointer;
 }
 
 >>>>>>> 8804b81 (feat(frontend): add pagination, glassmorphism and animations)
