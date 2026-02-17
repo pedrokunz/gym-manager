@@ -116,3 +116,35 @@ func (r *MemoryRepository) SeedData() error {
 	// No-op for memory repo, or pre-fill
 	return nil
 }
+
+func (r *MemoryRepository) GetMember(id int) (*Member, error) {
+	for _, m := range r.Members {
+		if m.ID == id {
+			return &m, nil
+		}
+	}
+	return nil, errors.New("member not found")
+}
+
+func (r *MemoryRepository) ListInvoicesByMember(memberID int, limit, offset int) ([]Invoice, error) {
+	var filtered []Invoice
+	for _, inv := range r.Invoices {
+		if inv.MemberID == memberID {
+			filtered = append(filtered, inv)
+		}
+	}
+
+	total := len(filtered)
+	if offset >= total {
+		return []Invoice{}, nil
+	}
+
+	end := total
+	if limit > 0 {
+		end = offset + limit
+		if end > total {
+			end = total
+		}
+	}
+	return filtered[offset:end], nil
+}

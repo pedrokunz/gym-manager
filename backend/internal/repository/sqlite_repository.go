@@ -160,3 +160,56 @@ func (r *SQLiteRepository) SeedData() error {
 
 	return tx.Commit()
 }
+
+// GetMember retrieves a single member by ID
+func (r *SQLiteRepository) GetMember(id int) (*Member, error) {
+	row := r.DB.QueryRow("SELECT id, name, email, status, joined_at FROM members WHERE id = ?", id)
+	var m Member
+	var joinedAtStr string
+	if err := row.Scan(&m.ID, &m.Name, &m.Email, &m.Status, &joinedAtStr); err != nil {
+		return nil, err
+	}
+	// Try parsing standard formats
+	parsedTime, err := time.Parse(time.RFC3339, joinedAtStr)
+	if err != nil {
+		// Try YYYY-MM-DD
+		parsedTime, _ = time.Parse("2006-01-02", joinedAtStr)
+	}
+	m.JoinedAt = parsedTime
+	return &m, nil
+}
+
+// ListInvoicesByMember retrieves invoices for a specific member
+func (r *SQLiteRepository) ListInvoicesByMember(memberID int, limit, offset int) ([]Invoice, error) {
+	query := "SELECT id, member_id, member_name, amount, status, date FROM invoices WHERE member_id = ? ORDER BY date DESC"
+	var args []interface{}
+	args = append(args, memberID)
+
+	if limit > 0 {
+		query += " LIMIT ? OFFSET ?"
+		args = append(args, limit, offset)
+	}
+
+	rows, err := r.DB.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var invoices []Invoice
+	for rows.Next() {
+		var i Invoice
+		var dateStr string
+		if err := rows.Scan(&i.ID, &i.MemberID, &i.MemberName, &i.Amount, &i.Status, &dateStr); err != nil {
+			return nil, err
+		}
+		// Try parsing standard formats
+		parsedTime, err := time.Parse(time.RFC3339, dateStr)
+		if err != nil {
+			parsedTime, _ = time.Parse("2006-01-02", dateStr)
+		}
+		i.Date = parsedTime
+		invoices = append(invoices, i)
+	}
+	return invoices, nil
+}

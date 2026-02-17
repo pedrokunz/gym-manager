@@ -33,6 +33,7 @@ type Invoice struct {
 type Repository interface {
 	// Members
 	ListMembers(status string, limit, offset int) ([]Member, error)
+	GetMember(id int) (*Member, error)
 	CreateMember(m Member) (int, error)
 	DeleteMember(id int) error
 
@@ -42,6 +43,7 @@ type Repository interface {
 
 	// Invoices
 	ListInvoices(limit, offset int) ([]Invoice, error)
+	ListInvoicesByMember(memberID int, limit, offset int) ([]Invoice, error)
 	CreateInvoice(inv Invoice) error
 	PayInvoice(id int) error
 
