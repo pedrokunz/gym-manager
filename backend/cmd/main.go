@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/pedrokunz/gym-manager/backend/internal/handlers"
 	"github.com/pedrokunz/gym-manager/backend/internal/middleware"
 	"github.com/pedrokunz/gym-manager/backend/internal/repository"
+	"github.com/pedrokunz/gym-manager/backend/internal/services"
 )
 
 func main() {
@@ -37,7 +39,7 @@ func main() {
 		}
 	})
 
-	mux.HandleFunc("/api/members/", memberHandler.DeleteMember)
+	mux.HandleFunc("/api/members/", memberHandler.HandleMemberRequest)
 
 	mux.HandleFunc("/api/plans/getall", planHandler.GetPlans)
 	mux.HandleFunc("/api/plans_create", planHandler.CreatePlan)
@@ -45,6 +47,18 @@ func main() {
 	mux.HandleFunc("/api/invoices", billingHandler.GetInvoices)
 	mux.HandleFunc("/api/invoices/create", billingHandler.CreateInvoice)
 	mux.HandleFunc("/api/invoices/pay/", billingHandler.PayInvoice)
+
+	// Analytics
+	analyticsService := services.NewAnalyticsService(repo)
+	mux.HandleFunc("/api/dashboard", func(w http.ResponseWriter, r *http.Request) {
+		data, err := analyticsService.GetDashboardData()
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(data)
+	})
 
 	mux.HandleFunc("/graphql", graphql.Handler)
 
